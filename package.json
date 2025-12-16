@@ -1,0 +1,25 @@
+{
+  "name": "telugu-news-workstation",
+  "version": "1.0.0",
+  "description": "A2UI-based Telugu short-news creation workstation",
+  "type": "module",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js"
+  },
+  "keywords": [
+    "a2ui",
+    "telugu",
+    "news",
+    "ai"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^4.18.2"
+  }
+}

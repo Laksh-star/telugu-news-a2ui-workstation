@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Telugu News Workstation - A2UI Demo</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <div class="input-section">
+      <h2>🎬 Create Telugu Short News</h2>
+      <div class="input-card">
+        <label for="newsInput">Enter Story URL / Transcript / Notes:</label>
+        <textarea
+          id="newsInput"
+          placeholder="Paste story URL, transcript, or notes here...&#10;&#10;Example: Technology breakthrough in AI research by Indian scientists..."
+          rows="4"
+        ></textarea>
+
+        <div class="input-type">
+          <label>Input Type:</label>
+          <div class="radio-group">
+            <label><input type="radio" name="inputType" value="url" checked> URL</label>
+            <label><input type="radio" name="inputType" value="transcript"> Transcript</label>
+            <label><input type="radio" name="inputType" value="notes"> Notes</label>
+          </div>
+        </div>
+
+        <button id="generateBtn" class="primary-btn">🚀 Generate News Package</button>
+      </div>
+    </div>
+
+    <div id="workstation" style="display: none;">
+      <!-- A2UI Rendered Content Will Appear Here -->
+    </div>
+
+    <div id="loading" style="display: none;">
+      <div class="loading-spinner">
+        <div class="spinner"></div>
+        <p>Generating Telugu news content...</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="a2ui-renderer.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
