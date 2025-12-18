@@ -66,7 +66,6 @@ export function createWorkstationUI(newsId, newsContent) {
         type: 'Tab',
         label: 'థంబ్‌నెయిల్ / Thumbnail',
         children: createThumbnailSection(
-          newsContent.thumbnailChecklist,
           newsContent.headlines.find(h => h.selected)?.text || newsContent.headlines[0].text
         )
       }
@@ -512,7 +511,7 @@ function createHashtagsSection(newsId, hashtags) {
   return components;
 }
 
-function createThumbnailSection(checklist, selectedHeadline) {
+function createThumbnailSection(selectedHeadline) {
   const components = [];
   let componentId = 400;
   const getId = () => `th${componentId++}`;
@@ -538,8 +537,8 @@ function createThumbnailSection(checklist, selectedHeadline) {
       {
         id: getId(),
         type: 'Badge',
-        text: `${checklist.filter(i => i.checked).length}/${checklist.length} Complete`,
-        variant: checklist.every(i => i.checked) ? 'success' : 'warning'
+        text: 'Ready',
+        variant: 'success'
       }
     ]
   });
@@ -620,7 +619,7 @@ function createThumbnailSection(checklist, selectedHeadline) {
     ]
   });
 
-  // Generate thumbnail button
+  // Generate and download buttons
   components.push({
     id: getId(),
     type: 'Row',
@@ -648,38 +647,18 @@ function createThumbnailSection(checklist, selectedHeadline) {
     ]
   });
 
-  // Progress bar for completion
-  const completionPercentage = (checklist.filter(i => i.checked).length / checklist.length) * 100;
-  components.push({
-    id: getId(),
-    type: 'ProgressBar',
-    label: 'థంబ్‌నెయిల్ పూర్తి స్థాయి / Completion Progress:',
-    value: completionPercentage,
-    showValue: true
-  });
-
-  // Checklist
+  // Status message area
   components.push({
     id: getId(),
     type: 'Card',
-    children: checklist.map(item => ({
-      id: getId(),
-      type: 'Row',
-      children: [
-        {
-          id: getId(),
-          type: 'Checkbox',
-          value: item.checked,
-          label: item.label
-        },
-        item.checked ? {
-          id: getId(),
-          type: 'Icon',
-          name: 'check_circle',
-          color: '#4caf50'
-        } : null
-      ].filter(Boolean)
-    }))
+    children: [
+      {
+        id: 'thumbnail-status',
+        type: 'Text',
+        text: 'రెడీ / Ready to generate thumbnail',
+        hint: 'body'
+      }
+    ]
   });
 
   return components;

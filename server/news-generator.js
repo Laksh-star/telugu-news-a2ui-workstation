@@ -154,12 +154,6 @@ Generate complete Telugu news content with this EXACT structure:
   "hashtags": [
     "#తెలుగువార్తలు", "#TeluguNews", "#ట్రెండింగ్", "#BreakingNews",
     "4 more relevant hashtags (mix Telugu and English)"
-  ],
-  "thumbnailChecklist": [
-    {"id": "bgColor", "label": "బ్యాక్‌గ్రౌండ్ కలర్ ఎంపిక / Background color selection", "checked": false},
-    {"id": "headline", "label": "హెడ్‌లైన్ టెక్స్ట్ ఓవర్‌లే / Headline text overlay", "checked": false},
-    {"id": "textColor", "label": "టెక్స్ట్ కలర్ ఎంపిక / Text color selection", "checked": false},
-    {"id": "preview", "label": "ప్రివ్యూ మరియు రివ్యూ / Preview and review", "checked": false}
   ]
 }
 
@@ -221,8 +215,7 @@ function validateContent(content, section) {
     return (
       content.headlines && Array.isArray(content.headlines) && content.headlines.length === 3 &&
       content.script && content.script.text &&
-      content.hashtags && Array.isArray(content.hashtags) &&
-      content.thumbnailChecklist && Array.isArray(content.thumbnailChecklist)
+      content.hashtags && Array.isArray(content.hashtags)
     );
   }
 }
@@ -263,12 +256,6 @@ function generateMockContent(input, type, regenerateSection) {
       '#TeluguNews',
       '#TechIndia',
       '#BreakingNews'
-    ],
-    thumbnailChecklist: [
-      { id: 'bgColor', label: 'బ్యాక్‌గ్రౌండ్ కలర్ ఎంపిక / Background color selection', checked: false },
-      { id: 'headline', label: 'హెడ్‌లైన్ టెక్స్ట్ ఓవర్‌లే / Headline text overlay', checked: false },
-      { id: 'textColor', label: 'టెక్స్ట్ కలర్ ఎంపిక / Text color selection', checked: false },
-      { id: 'preview', label: 'ప్రివ్యూ మరియు రివ్యూ / Preview and review', checked: false }
     ]
   };
 

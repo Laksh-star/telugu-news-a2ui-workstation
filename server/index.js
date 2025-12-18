@@ -158,7 +158,6 @@ app.post('/api/approve', async (req, res) => {
     allHeadlines: newsContent.headlines.map(h => h.text),
     script: newsContent.script,
     hashtags: newsContent.hashtags,
-    thumbnailChecklist: newsContent.thumbnailChecklist,
     originalInput: newsContent.originalInput,
     inputType: newsContent.type
   };

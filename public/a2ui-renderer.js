@@ -924,11 +924,26 @@ ${data.originalInput}
       ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
       ctx.fillText('Telugu Short News', canvas.width / 2, canvas.height - 100);
 
+      // Update status message
+      const statusElement = document.getElementById('thumbnail-status');
+      if (statusElement) {
+        statusElement.textContent = '✅ థంబ్‌నెయిల్ జనరేట్ చేయబడింది! / Thumbnail generated successfully!';
+        statusElement.style.color = '#4caf50';
+      }
+
       this.showNotification('థంబ్‌నెయిల్ జనరేట్ చేయబడింది! / Thumbnail generated successfully!', 'success');
       console.log('✅ Thumbnail generated');
 
     } catch (error) {
       console.error('❌ Thumbnail generation failed:', error);
+
+      // Update status message
+      const statusElement = document.getElementById('thumbnail-status');
+      if (statusElement) {
+        statusElement.textContent = '❌ థంబ్‌నెయిల్ జనరేషన్ విఫలమైంది / Thumbnail generation failed';
+        statusElement.style.color = '#f44336';
+      }
+
       this.showNotification('Thumbnail generation failed: ' + error.message, 'error');
     }
   }
@@ -950,12 +965,27 @@ ${data.originalInput}
         link.click();
         URL.revokeObjectURL(url);
 
+        // Update status message
+        const statusElement = document.getElementById('thumbnail-status');
+        if (statusElement) {
+          statusElement.textContent = '💾 థంబ్‌నెయిల్ డౌన్‌లోడ్ చేయబడింది! / Thumbnail downloaded successfully!';
+          statusElement.style.color = '#2196f3';
+        }
+
         this.showNotification('థంబ్‌నెయిల్ డౌన్‌లోడ్ చేయబడింది! / Thumbnail downloaded!', 'success');
         console.log('✅ Thumbnail downloaded');
       }, 'image/png');
 
     } catch (error) {
       console.error('❌ Thumbnail download failed:', error);
+
+      // Update status message
+      const statusElement = document.getElementById('thumbnail-status');
+      if (statusElement) {
+        statusElement.textContent = '❌ డౌన్‌లోడ్ విఫలమైంది / Download failed';
+        statusElement.style.color = '#f44336';
+      }
+
       this.showNotification('Thumbnail download failed: ' + error.message, 'error');
     }
   }
