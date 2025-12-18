@@ -113,8 +113,19 @@ class A2UIRenderer {
     }
 
     if (component.action) {
-      button.addEventListener('click', () => {
-        this.handleAction(component.action);
+      button.addEventListener('click', async () => {
+        // Disable button to prevent double-clicks
+        button.disabled = true;
+        const originalText = button.textContent;
+        button.textContent = 'రాస్తోంది... / Processing...';
+
+        try {
+          await this.handleAction(component.action);
+        } finally {
+          // Re-enable button after action completes
+          button.disabled = false;
+          button.textContent = originalText;
+        }
       });
     }
 
