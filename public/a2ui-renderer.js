@@ -308,6 +308,21 @@ class A2UIRenderer {
     if (component.rows && component.multiline) input.rows = component.rows;
 
     container.appendChild(input);
+
+    // Add character counter for editable fields (headlines and script)
+    if (component.id && (component.id.startsWith('headline-') || component.id === 'script-editor')) {
+      const charCounter = document.createElement('div');
+      charCounter.className = 'a2ui-textfield-counter';
+      charCounter.textContent = `${input.value.length} characters`;
+
+      // Update counter on input
+      input.addEventListener('input', () => {
+        charCounter.textContent = `${input.value.length} characters`;
+      });
+
+      container.appendChild(charCounter);
+    }
+
     return container;
   }
 
@@ -343,16 +358,30 @@ class A2UIRenderer {
       group.appendChild(groupLabel);
     }
 
-    if (component.options) {
-      component.options.forEach((option, index) => {
-        const radio = this.renderRadio({
-          id: `${component.id}-option-${index}`,
-          name: component.id,
-          label: option.label || option,
-          value: option.value || option,
-          checked: option.checked || index === 0
-        });
-        group.appendChild(radio);
+    // Support both 'options' (legacy) and 'children' (A2UI standard)
+    const items = component.children || component.options;
+
+    if (items) {
+      items.forEach((item, index) => {
+        // If item is a Radio component, render it directly
+        if (item.type === 'Radio') {
+          const radioElement = this.renderRadio({
+            ...item,
+            name: component.name || component.id
+          });
+          group.appendChild(radioElement);
+        }
+        // Legacy support for plain option objects
+        else {
+          const radio = this.renderRadio({
+            id: `${component.id}-option-${index}`,
+            name: component.name || component.id,
+            label: item.label || item,
+            value: item.value || item,
+            checked: item.checked || index === 0
+          });
+          group.appendChild(radio);
+        }
       });
     }
 
@@ -472,16 +501,52 @@ class A2UIRenderer {
   }
 
   async handleAction(action) {
+    // Handle custom actions (like thumbnail generation)
+    if (action.type === 'custom') {
+      if (action.handler === 'generateThumbnail') {
+        this.generateThumbnail();
+        return;
+      } else if (action.handler === 'downloadThumbnail') {
+        this.downloadThumbnail();
+        return;
+      }
+    }
+
     if (action.type === 'post') {
       try {
         console.log('🔄 Action triggered:', action.url, action.body);
+
+        // Get export format if this is an approve action
+        let requestBody = { ...action.body };
+
+        if (action.url === '/api/approve') {
+          const selectedFormat = document.querySelector('input[name="exportFormat"]:checked');
+          if (selectedFormat) {
+            requestBody.format = selectedFormat.value;
+          }
+        }
+
+        // Get edited headlines if this is an update-headlines action
+        if (action.url === '/api/update-headlines') {
+          const headlineInputs = document.querySelectorAll('[id^="headline-"]');
+          const headlines = Array.from(headlineInputs).map(input => input.value);
+          requestBody.headlines = headlines;
+        }
+
+        // Get edited script if this is an update-script action
+        if (action.url === '/api/update-script') {
+          const scriptEditor = document.getElementById('script-editor');
+          if (scriptEditor) {
+            requestBody.scriptText = scriptEditor.value;
+          }
+        }
 
         const response = await fetch(action.url, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify(action.body)
+          body: JSON.stringify(requestBody)
         });
 
         const result = await response.json();
@@ -497,12 +562,29 @@ class A2UIRenderer {
             console.log('💾 Save draft action');
             this.showNotification(result.message, 'success');
           }
+          // Handle update headlines
+          else if (action.url === '/api/update-headlines') {
+            console.log('💾 Update headlines action');
+            this.showNotification(result.message, 'success');
+          }
+          // Handle update script
+          else if (action.url === '/api/update-script') {
+            console.log('💾 Update script action');
+            this.showNotification(result.message, 'success');
+          }
           // Handle approval/export
           else if (action.url === '/api/approve') {
             console.log('✅ Approve action, has exportData:', !!result.exportData);
             this.showNotification(result.message, 'success');
             if (result.exportData) {
-              this.downloadJSON(result.exportData, result.downloadFileName);
+              // Download based on format
+              if (result.format === 'json') {
+                this.downloadJSON(result.exportData, result.downloadFileName);
+              } else if (result.format === 'text') {
+                this.downloadText(result.exportData, result.downloadFileName);
+              } else if (result.format === 'pdf') {
+                this.downloadPDF(result.exportData, result.downloadFileName);
+              }
             }
           }
           // Generic success
@@ -575,6 +657,306 @@ class A2UIRenderer {
     } catch (error) {
       console.error('❌ Download failed:', error);
       this.showNotification('Download failed: ' + error.message, 'error');
+    }
+  }
+
+  downloadText(data, filename) {
+    try {
+      console.log('📥 Downloading Text:', filename);
+
+      // Format data as plain text
+      let textContent = `Telugu Short-News Package
+================================================
+
+Generated At: ${data.generatedAt}
+News ID: ${data.newsId}
+Input Type: ${data.inputType}
+
+================================================
+HEADLINES (హెడ్‌లైన్స్)
+================================================
+
+Selected Headline:
+${data.selectedHeadline}
+
+All Headlines:
+${data.allHeadlines.map((h, i) => `${i + 1}. ${h}`).join('\n')}
+
+================================================
+SCRIPT (స్క్రిప్ట్)
+================================================
+
+${data.script}
+
+================================================
+HASHTAGS (హ్యాష్‌ట్యాగ్స్)
+================================================
+
+${data.hashtags.join(' ')}
+
+================================================
+THUMBNAIL CHECKLIST (థంబ్‌నైల్ చెక్‌లిస్ట్)
+================================================
+
+${data.thumbnailChecklist.map((item, i) => `${item.completed ? '✓' : '☐'} ${i + 1}. ${item.label}`).join('\n')}
+
+================================================
+ORIGINAL INPUT
+================================================
+
+${data.originalInput}
+`;
+
+      const blob = new Blob([textContent], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename.replace('.json', '.txt');
+      link.style.display = 'none';
+
+      document.body.appendChild(link);
+      link.click();
+
+      setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        console.log('✅ Text download triggered successfully');
+      }, 100);
+
+    } catch (error) {
+      console.error('❌ Text download failed:', error);
+      this.showNotification('Text download failed: ' + error.message, 'error');
+    }
+  }
+
+  downloadPDF(data, filename) {
+    // Simple HTML-to-PDF approach using print dialog
+    try {
+      console.log('📥 Generating PDF preview:', filename);
+
+      // Create a printable HTML view
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Telugu News Package - ${data.newsId}</title>
+          <meta charset="UTF-8">
+          <style>
+            @page { margin: 2cm; }
+            body {
+              font-family: 'Noto Sans Telugu', Arial, sans-serif;
+              line-height: 1.6;
+              color: #333;
+              max-width: 800px;
+              margin: 0 auto;
+            }
+            h1 { color: #667eea; border-bottom: 3px solid #667eea; padding-bottom: 10px; }
+            h2 { color: #764ba2; margin-top: 30px; }
+            .meta { color: #666; font-size: 14px; }
+            .headline-box {
+              background: #f5f5f5;
+              padding: 15px;
+              border-left: 4px solid #667eea;
+              margin: 10px 0;
+            }
+            .script-box {
+              background: #fafafa;
+              padding: 20px;
+              border-radius: 8px;
+              margin: 15px 0;
+            }
+            .hashtags {
+              color: #667eea;
+              font-weight: 600;
+            }
+            .checklist {
+              list-style: none;
+              padding-left: 0;
+            }
+            .checklist li {
+              padding: 8px 0;
+              border-bottom: 1px solid #eee;
+            }
+          </style>
+        </head>
+        <body>
+          <h1>🎬 Telugu Short-News Package</h1>
+          <div class="meta">
+            <p><strong>Generated:</strong> ${new Date(data.generatedAt).toLocaleString()}</p>
+            <p><strong>News ID:</strong> ${data.newsId}</p>
+            <p><strong>Input Type:</strong> ${data.inputType}</p>
+          </div>
+
+          <h2>📰 Selected Headline / ఎంచుకున్న హెడ్‌లైన్</h2>
+          <div class="headline-box">
+            ${data.selectedHeadline}
+          </div>
+
+          <h2>📝 All Headlines / అన్ని హెడ్‌లైన్స్</h2>
+          ${data.allHeadlines.map((h, i) => `<div class="headline-box">${i + 1}. ${h}</div>`).join('')}
+
+          <h2>🎬 Script (15 seconds) / స్క్రిప్ట్</h2>
+          <div class="script-box">
+            ${data.script}
+          </div>
+
+          <h2>#️⃣ Hashtags / హ్యాష్‌ట్యాగ్స్</h2>
+          <p class="hashtags">${data.hashtags.join(' ')}</p>
+
+          <h2>✅ Thumbnail Checklist / థంబ్‌నైల్ చెక్‌లిస్ట్</h2>
+          <ul class="checklist">
+            ${data.thumbnailChecklist.map(item =>
+              `<li>${item.completed ? '✓' : '☐'} ${item.label}</li>`
+            ).join('')}
+          </ul>
+
+          <h2>📄 Original Input</h2>
+          <div class="script-box">
+            ${data.originalInput}
+          </div>
+        </body>
+        </html>
+      `);
+
+      printWindow.document.close();
+
+      // Wait for content to load, then trigger print dialog
+      printWindow.onload = () => {
+        setTimeout(() => {
+          printWindow.print();
+          console.log('✅ PDF print dialog opened');
+        }, 250);
+      };
+
+      this.showNotification('PDF preview opened. Use Print dialog to save as PDF.', 'success');
+
+    } catch (error) {
+      console.error('❌ PDF generation failed:', error);
+      this.showNotification('PDF generation failed: ' + error.message, 'error');
+    }
+  }
+
+  generateThumbnail() {
+    try {
+      console.log('🎨 Generating thumbnail...');
+
+      // Get values from inputs
+      const bgColor = document.getElementById('thumbnail-bg-color')?.value || '#667eea';
+      const headline = document.getElementById('thumbnail-headline')?.value || 'Sample Headline';
+      const textColor = document.getElementById('thumbnail-text-color')?.value || '#ffffff';
+
+      // Create or get canvas
+      let canvas = document.getElementById('thumbnail-canvas');
+      if (!canvas) {
+        canvas = document.createElement('canvas');
+        canvas.id = 'thumbnail-canvas';
+        canvas.width = 1080;  // 9:16 aspect ratio
+        canvas.height = 1920;
+        canvas.style.maxWidth = '100%';
+        canvas.style.border = '2px solid #ddd';
+        canvas.style.borderRadius = '8px';
+
+        // Find the preview card and add canvas to it
+        const previewCards = document.querySelectorAll('.a2ui-card');
+        for (let card of previewCards) {
+          const text = card.textContent;
+          if (text.includes('ప్రివ్యూ / Preview')) {
+            // Clear existing content except the header
+            const children = Array.from(card.children);
+            children.forEach((child, idx) => {
+              if (idx > 0) child.remove();
+            });
+            card.appendChild(canvas);
+            break;
+          }
+        }
+      }
+
+      const ctx = canvas.getContext('2d');
+
+      // Clear canvas
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Add gradient overlay for better text readability
+      const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      gradient.addColorStop(0, 'rgba(0, 0, 0, 0.3)');
+      gradient.addColorStop(1, 'rgba(0, 0, 0, 0.6)');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Configure text
+      ctx.fillStyle = textColor;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      // Draw headline with word wrapping
+      const maxWidth = canvas.width - 100;
+      const lineHeight = 120;
+      const words = headline.split(' ');
+      const lines = [];
+      let currentLine = words[0];
+
+      ctx.font = 'bold 90px Arial, sans-serif';
+
+      for (let i = 1; i < words.length; i++) {
+        const testLine = currentLine + ' ' + words[i];
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > maxWidth) {
+          lines.push(currentLine);
+          currentLine = words[i];
+        } else {
+          currentLine = testLine;
+        }
+      }
+      lines.push(currentLine);
+
+      // Draw lines centered
+      const startY = (canvas.height - (lines.length * lineHeight)) / 2;
+      lines.forEach((line, i) => {
+        ctx.fillText(line, canvas.width / 2, startY + (i * lineHeight));
+      });
+
+      // Add branding at bottom
+      ctx.font = 'bold 40px Arial, sans-serif';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      ctx.fillText('Telugu Short News', canvas.width / 2, canvas.height - 100);
+
+      this.showNotification('థంబ్‌నెయిల్ జనరేట్ చేయబడింది! / Thumbnail generated successfully!', 'success');
+      console.log('✅ Thumbnail generated');
+
+    } catch (error) {
+      console.error('❌ Thumbnail generation failed:', error);
+      this.showNotification('Thumbnail generation failed: ' + error.message, 'error');
+    }
+  }
+
+  downloadThumbnail() {
+    try {
+      const canvas = document.getElementById('thumbnail-canvas');
+      if (!canvas) {
+        this.showNotification('దయచేసి మొదట థంబ్‌నెయిల్ జనరేట్ చేయండి / Please generate thumbnail first', 'error');
+        return;
+      }
+
+      // Convert canvas to blob and download
+      canvas.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `telugu-news-thumbnail-${Date.now()}.png`;
+        link.click();
+        URL.revokeObjectURL(url);
+
+        this.showNotification('థంబ్‌నెయిల్ డౌన్‌లోడ్ చేయబడింది! / Thumbnail downloaded!', 'success');
+        console.log('✅ Thumbnail downloaded');
+      }, 'image/png');
+
+    } catch (error) {
+      console.error('❌ Thumbnail download failed:', error);
+      this.showNotification('Thumbnail download failed: ' + error.message, 'error');
     }
   }
 }

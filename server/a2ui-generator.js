@@ -65,7 +65,10 @@ export function createWorkstationUI(newsId, newsContent) {
         id: getId(),
         type: 'Tab',
         label: 'థంబ్‌నెయిల్ / Thumbnail',
-        children: createThumbnailSection(newsContent.thumbnailChecklist)
+        children: createThumbnailSection(
+          newsContent.thumbnailChecklist,
+          newsContent.headlines.find(h => h.selected)?.text || newsContent.headlines[0].text
+        )
       }
     ]
   });
@@ -78,6 +81,38 @@ export function createWorkstationUI(newsId, newsContent) {
       {
         id: getId(),
         type: 'Divider'
+      },
+      {
+        id: getId(),
+        type: 'Text',
+        hint: 'h4',
+        text: 'ఎగ్జిట్ ఫార్మాట్ / Export Format'
+      },
+      {
+        id: getId(),
+        type: 'RadioGroup',
+        name: 'exportFormat',
+        children: [
+          {
+            id: getId(),
+            type: 'Radio',
+            label: 'JSON (స్ట్రక్చర్డ్ డేటా / Structured Data)',
+            value: 'json',
+            checked: true
+          },
+          {
+            id: getId(),
+            type: 'Radio',
+            label: 'Text (టెక్స్ట్ ఫైల్ / Plain Text)',
+            value: 'text'
+          },
+          {
+            id: getId(),
+            type: 'Radio',
+            label: 'PDF (డాక్యుమెంట్ / Document)',
+            value: 'pdf'
+          }
+        ]
       },
       {
         id: getId(),
@@ -102,7 +137,7 @@ export function createWorkstationUI(newsId, newsContent) {
             action: {
               type: 'post',
               url: '/api/approve',
-              body: { newsId }
+              body: { newsId, format: 'json' }
             }
           }
         ]
@@ -155,7 +190,7 @@ function createHeadlinesSection(newsId, headlines) {
     ]
   });
 
-  // Display each headline option with radio buttons
+  // Display each headline option with editable text fields
   headlines.forEach((headline, index) => {
     components.push({
       id: getId(),
@@ -164,36 +199,48 @@ function createHeadlinesSection(newsId, headlines) {
         {
           id: getId(),
           type: 'Row',
+          children: [
+            {
+              id: getId(),
+              type: 'Text',
+              text: `ఆప్షన్ ${index + 1}:`,
+              hint: 'caption'
+            },
+            headline.selected ? {
+              id: getId(),
+              type: 'Badge',
+              text: 'Selected',
+              variant: 'success'
+            } : null
+          ].filter(Boolean)
+        },
+        {
+          id: `headline-${index}`,
+          type: 'TextField',
+          value: headline.text,
+          placeholder: 'Edit headline...'
+        },
+        {
+          id: getId(),
+          type: 'Row',
           distribution: 'spaceBetween',
           children: [
             {
               id: getId(),
-              type: 'Column',
-              weight: 1,
+              type: 'Row',
               children: [
                 {
                   id: getId(),
-                  type: 'Row',
-                  children: [
-                    {
-                      id: getId(),
-                      type: 'Text',
-                      text: `ఆప్షన్ ${index + 1}:`,
-                      hint: 'caption'
-                    },
-                    headline.selected ? {
-                      id: getId(),
-                      type: 'Badge',
-                      text: 'Selected',
-                      variant: 'success'
-                    } : null
-                  ].filter(Boolean)
+                  type: 'Icon',
+                  name: 'text_fields',
+                  color: '#888',
+                  size: '18px'
                 },
                 {
                   id: getId(),
                   type: 'Text',
-                  text: headline.text,
-                  hint: 'h4'
+                  text: `${headline.text.length} characters`,
+                  hint: 'caption'
                 }
               ]
             },
@@ -203,7 +250,7 @@ function createHeadlinesSection(newsId, headlines) {
               name: 'headline-selection',
               value: headline.id,
               checked: headline.selected,
-              label: ''
+              label: 'Use this'
             }
           ]
         }
@@ -211,26 +258,55 @@ function createHeadlinesSection(newsId, headlines) {
     });
   });
 
-  // Regenerate button with icon
+  // Action buttons
   components.push({
     id: getId(),
     type: 'Row',
+    distribution: 'spaceBetween',
     children: [
       {
         id: getId(),
-        type: 'Icon',
-        name: 'refresh',
-        color: '#667eea'
+        type: 'Row',
+        children: [
+          {
+            id: getId(),
+            type: 'Icon',
+            name: 'save',
+            color: '#4caf50'
+          },
+          {
+            id: getId(),
+            type: 'Button',
+            text: 'హెడ్‌లైన్స్ సేవ్ చేయండి / Save Headlines',
+            action: {
+              type: 'post',
+              url: '/api/update-headlines',
+              body: { newsId }
+            }
+          }
+        ]
       },
       {
         id: getId(),
-        type: 'Button',
-        text: 'హెడ్‌లైన్స్ రీజెనరేట్ చేయండి / Regenerate Headlines',
-        action: {
-          type: 'post',
-          url: '/api/regenerate',
-          body: { newsId, section: 'headlines' }
-        }
+        type: 'Row',
+        children: [
+          {
+            id: getId(),
+            type: 'Icon',
+            name: 'refresh',
+            color: '#667eea'
+          },
+          {
+            id: getId(),
+            type: 'Button',
+            text: 'రీజెనరేట్ / Regenerate',
+            action: {
+              type: 'post',
+              url: '/api/regenerate',
+              body: { newsId, section: 'headlines' }
+            }
+          }
+        ]
       }
     ]
   });
@@ -270,12 +346,19 @@ function createScriptSection(newsId, script) {
     type: 'Card',
     children: [
       {
-        id: getId(),
+        id: 'script-editor',
         type: 'TextField',
-        label: 'స్క్రిప్ట్ (Edit if needed):',
+        label: 'స్క్రిప్ట్ / Script (Editable):',
+        placeholder: 'Edit your script here...',
         value: script.text,
         multiline: true,
-        rows: 5
+        rows: 6
+      },
+      {
+        id: getId(),
+        type: 'Text',
+        text: '💡 Tip: Keep it conversational and within 15 seconds for best results',
+        hint: 'caption'
       },
       {
         id: getId(),
@@ -284,30 +367,47 @@ function createScriptSection(newsId, script) {
       {
         id: getId(),
         type: 'Row',
+        distribution: 'spaceBetween',
         children: [
           {
             id: getId(),
-            type: 'Icon',
-            name: 'timer',
-            color: '#888'
+            type: 'Row',
+            children: [
+              {
+                id: getId(),
+                type: 'Icon',
+                name: 'timer',
+                color: '#888'
+              },
+              {
+                id: getId(),
+                type: 'Text',
+                text: `వ్యవధి: ${script.duration}`,
+                hint: 'caption'
+              },
+              {
+                id: getId(),
+                type: 'Icon',
+                name: 'article',
+                color: '#888'
+              },
+              {
+                id: getId(),
+                type: 'Text',
+                text: `పదాల సంఖ్య: ${script.wordCount}`,
+                hint: 'caption'
+              }
+            ]
           },
           {
             id: getId(),
-            type: 'Text',
-            text: `వ్యవధి: ${script.duration}`,
-            hint: 'caption'
-          },
-          {
-            id: getId(),
-            type: 'Icon',
-            name: 'article',
-            color: '#888'
-          },
-          {
-            id: getId(),
-            type: 'Text',
-            text: `పదాల సంఖ్య: ${script.wordCount}`,
-            hint: 'caption'
+            type: 'Button',
+            text: 'స్క్రిప్ట్ సేవ్ చేయండి / Save Script',
+            action: {
+              type: 'post',
+              url: '/api/update-script',
+              body: { newsId }
+            }
           }
         ]
       }
@@ -412,7 +512,7 @@ function createHashtagsSection(newsId, hashtags) {
   return components;
 }
 
-function createThumbnailSection(checklist) {
+function createThumbnailSection(checklist, selectedHeadline) {
   const components = [];
   let componentId = 400;
   const getId = () => `th${componentId++}`;
@@ -432,7 +532,7 @@ function createThumbnailSection(checklist) {
       {
         id: getId(),
         type: 'Text',
-        text: 'థంబ్‌నెయిల్ చెక్‌లిస్ట్:',
+        text: 'థంబ్‌నెయిల్ జనరేటర్ / Thumbnail Generator:',
         hint: 'h3'
       },
       {
@@ -444,7 +544,7 @@ function createThumbnailSection(checklist) {
     ]
   });
 
-  // Thumbnail preview placeholder
+  // Thumbnail customization controls
   components.push({
     id: getId(),
     type: 'Card',
@@ -452,15 +552,98 @@ function createThumbnailSection(checklist) {
       {
         id: getId(),
         type: 'Text',
-        text: 'థంబ్‌నెయిల్ ప్రివ్యూ / Thumbnail Preview:',
-        hint: 'caption'
+        text: '1️⃣ బ్యాక్‌గ్రౌండ్ కలర్ / Background Color:',
+        hint: 'h4'
+      },
+      {
+        id: 'thumbnail-bg-color',
+        type: 'TextField',
+        placeholder: '#667eea',
+        value: '#667eea',
+        inputType: 'color'
       },
       {
         id: getId(),
-        type: 'Image',
-        url: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360"%3E%3Crect fill="%23667eea" width="640" height="360"/%3E%3Ctext x="320" y="180" text-anchor="middle" fill="white" font-size="24" font-family="Arial"%3EThumbnail Preview%3C/text%3E%3C/svg%3E',
-        alt: 'Thumbnail preview placeholder',
-        width: '100%'
+        type: 'Divider'
+      },
+      {
+        id: getId(),
+        type: 'Text',
+        text: '2️⃣ హెడ్‌లైన్ టెక్స్ట్ / Headline Text:',
+        hint: 'h4'
+      },
+      {
+        id: 'thumbnail-headline',
+        type: 'TextField',
+        value: selectedHeadline,
+        multiline: true,
+        rows: 2,
+        placeholder: 'Enter headline for thumbnail...'
+      },
+      {
+        id: getId(),
+        type: 'Divider'
+      },
+      {
+        id: getId(),
+        type: 'Text',
+        text: '3️⃣ టెక్స్ట్ కలర్ / Text Color:',
+        hint: 'h4'
+      },
+      {
+        id: 'thumbnail-text-color',
+        type: 'TextField',
+        placeholder: '#ffffff',
+        value: '#ffffff',
+        inputType: 'color'
+      }
+    ]
+  });
+
+  // Thumbnail preview with canvas
+  components.push({
+    id: getId(),
+    type: 'Card',
+    children: [
+      {
+        id: getId(),
+        type: 'Text',
+        text: '📸 ప్రివ్యూ / Preview (9:16 aspect ratio for shorts):',
+        hint: 'h4'
+      },
+      {
+        id: getId(),
+        type: 'Text',
+        text: 'Canvas preview will be rendered here',
+        hint: 'caption'
+      }
+    ]
+  });
+
+  // Generate thumbnail button
+  components.push({
+    id: getId(),
+    type: 'Row',
+    distribution: 'end',
+    children: [
+      {
+        id: getId(),
+        type: 'Button',
+        text: '🎨 థంబ్‌నెయిల్ జనరేట్ చేయండి / Generate Thumbnail',
+        primary: true,
+        action: {
+          type: 'custom',
+          handler: 'generateThumbnail'
+        }
+      },
+      {
+        id: getId(),
+        type: 'Button',
+        text: '💾 డౌన్‌లోడ్ / Download',
+        action: {
+          type: 'custom',
+          handler: 'downloadThumbnail'
+        }
       }
     ]
   });

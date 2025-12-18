@@ -18,6 +18,10 @@
           placeholder="Paste story URL, transcript, or notes here...&#10;&#10;Example: Technology breakthrough in AI research by Indian scientists..."
           rows="4"
         ></textarea>
+        <div class="char-counter">
+          <span id="charCount">0</span> / 5000 characters
+          <span id="charStatus" class="char-status"></span>
+        </div>
 
         <div class="input-type">
           <label>Input Type:</label>
@@ -39,7 +43,17 @@
     <div id="loading" style="display: none;">
       <div class="loading-spinner">
         <div class="spinner"></div>
-        <p>Generating Telugu news content...</p>
+        <p id="loadingMessage">Generating Telugu news content...</p>
+        <div class="progress-container">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="progress-details">
+          <span id="progressStatus">Preparing request...</span>
+          <span id="progressPercent">0%</span>
+        </div>
+        <div class="estimated-time">
+          <span id="timeEstimate">Estimated time: ~15-20 seconds</span>
+        </div>
       </div>
     </div>
   </div>

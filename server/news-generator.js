@@ -156,11 +156,10 @@ Generate complete Telugu news content with this EXACT structure:
     "4 more relevant hashtags (mix Telugu and English)"
   ],
   "thumbnailChecklist": [
-    {"id": "bg", "label": "బ్యాక్‌గ్రౌండ్ ఇమేజ్ ఎంపిక చేయండి", "checked": false},
-    {"id": "headline", "label": "హెడ్‌లైన్ టెక్స్ట్ ఓవర్‌లే", "checked": false},
-    {"id": "logo", "label": "చానెల్ లోగో పొజిషన్", "checked": false},
-    {"id": "colors", "label": "కలర్ స్కీమ్ వర్తింపజేయండి", "checked": false},
-    {"id": "preview", "label": "ప్రివ్యూ మరియు రివ్యూ", "checked": false}
+    {"id": "bgColor", "label": "బ్యాక్‌గ్రౌండ్ కలర్ ఎంపిక / Background color selection", "checked": false},
+    {"id": "headline", "label": "హెడ్‌లైన్ టెక్స్ట్ ఓవర్‌లే / Headline text overlay", "checked": false},
+    {"id": "textColor", "label": "టెక్స్ట్ కలర్ ఎంపిక / Text color selection", "checked": false},
+    {"id": "preview", "label": "ప్రివ్యూ మరియు రివ్యూ / Preview and review", "checked": false}
   ]
 }
 
@@ -266,11 +265,10 @@ function generateMockContent(input, type, regenerateSection) {
       '#BreakingNews'
     ],
     thumbnailChecklist: [
-      { id: 'bg', label: 'బ్యాక్‌గ్రౌండ్ ఇమేజ్ ఎంపిక చేయండి', checked: false },
-      { id: 'headline', label: 'హెడ్‌లైన్ టెక్స్ట్ ఓవర్‌లే', checked: false },
-      { id: 'logo', label: 'చానెల్ లోగో పొజిషన్', checked: false },
-      { id: 'colors', label: 'కలర్ స్కీమ్ వర్తింపజేయండి', checked: false },
-      { id: 'preview', label: 'ప్రివ్యూ మరియు రివ్యూ', checked: false }
+      { id: 'bgColor', label: 'బ్యాక్‌గ్రౌండ్ కలర్ ఎంపిక / Background color selection', checked: false },
+      { id: 'headline', label: 'హెడ్‌లైన్ టెక్స్ట్ ఓవర్‌లే / Headline text overlay', checked: false },
+      { id: 'textColor', label: 'టెక్స్ట్ కలర్ ఎంపిక / Text color selection', checked: false },
+      { id: 'preview', label: 'ప్రివ్యూ మరియు రివ్యూ / Preview and review', checked: false }
     ]
   };
 

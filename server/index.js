@@ -72,6 +72,59 @@ app.post('/api/regenerate', async (req, res) => {
   }
 });
 
+// Update headlines
+app.post('/api/update-headlines', async (req, res) => {
+  const { newsId, headlines } = req.body;
+
+  const newsContent = newsStore.get(newsId);
+  if (!newsContent) {
+    return res.status(404).json({ error: 'News not found' });
+  }
+
+  // Update headlines if provided
+  if (headlines && Array.isArray(headlines)) {
+    newsContent.headlines = headlines.map((text, index) => ({
+      id: `headline-${index}`,
+      text: text,
+      selected: index === 0
+    }));
+    newsStore.set(newsId, newsContent);
+  }
+
+  res.json({
+    success: true,
+    message: 'హెడ్‌లైన్స్ అప్‌డేట్ చేయబడింది / Headlines updated successfully!',
+    updatedAt: new Date().toISOString()
+  });
+});
+
+// Update script
+app.post('/api/update-script', async (req, res) => {
+  const { newsId, scriptText } = req.body;
+
+  const newsContent = newsStore.get(newsId);
+  if (!newsContent) {
+    return res.status(404).json({ error: 'News not found' });
+  }
+
+  // Update script if provided
+  if (scriptText) {
+    const wordCount = scriptText.trim().split(/\s+/).length;
+    newsContent.script = {
+      text: scriptText,
+      duration: '15 seconds',
+      wordCount: wordCount
+    };
+    newsStore.set(newsId, newsContent);
+  }
+
+  res.json({
+    success: true,
+    message: 'స్క్రిప్ట్ అప్‌డేట్ చేయబడింది / Script updated successfully!',
+    updatedAt: new Date().toISOString()
+  });
+});
+
 // Save draft
 app.post('/api/save', async (req, res) => {
   const { newsId } = req.body;
@@ -90,7 +143,7 @@ app.post('/api/save', async (req, res) => {
 
 // Approve and export
 app.post('/api/approve', async (req, res) => {
-  const { newsId } = req.body;
+  const { newsId, format = 'json' } = req.body;
 
   const newsContent = newsStore.get(newsId);
   if (!newsContent) {
@@ -110,11 +163,25 @@ app.post('/api/approve', async (req, res) => {
     inputType: newsContent.type
   };
 
+  // Determine file extension based on format
+  const fileExtensions = {
+    json: '.json',
+    text: '.txt',
+    pdf: '.pdf'
+  };
+
+  const formatMessages = {
+    json: 'న్యూస్ ప్యాకేజ్ JSON గా ఎగ్జిట్ చేయబడింది / News package exported as JSON!',
+    text: 'న్యూస్ ప్యాకేజ్ టెక్స్ట్ గా ఎగ్జిట్ చేయబడింది / News package exported as Text!',
+    pdf: 'న్యూస్ ప్యాకేజ్ PDF గా ఎగ్జిట్ చేయబడింది / News package exported as PDF!'
+  };
+
   res.json({
     success: true,
     exportData: exportData,
-    message: 'న్యూస్ ప్యాకేజ్ ఆమోదించబడింది / News package approved and ready for export!',
-    downloadFileName: `telugu-news-${newsId}.json`
+    format: format,
+    message: formatMessages[format] || formatMessages.json,
+    downloadFileName: `telugu-news-${newsId}${fileExtensions[format] || '.json'}`
   });
 });
 
