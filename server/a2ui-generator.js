@@ -488,17 +488,6 @@ function createHashtagsSection(newsId, hashtags) {
 
   components.push({
     id: getId(),
-    type: 'List',
-    children: hashtags.map(tag => ({
-      id: getId(),
-      type: 'Text',
-      text: tag,
-      hint: 'body'
-    }))
-  });
-
-  components.push({
-    id: getId(),
     type: 'Button',
     text: '🔄 హ్యాష్‌ట్యాగ్స్ రీజెనరేట్ చేయండి / Regenerate Hashtags',
     action: {
