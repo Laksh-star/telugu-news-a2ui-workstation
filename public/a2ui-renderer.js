@@ -25,6 +25,8 @@ class A2UIRenderer {
       ProgressBar: this.renderProgressBar.bind(this),
       Badge: this.renderBadge.bind(this),
     };
+    // Track active tab index to preserve state during re-renders
+    this.activeTabIndex = 0;
   }
 
   render(a2uiPayload, container) {
@@ -187,16 +189,24 @@ class A2UIRenderer {
         // Create tab button
         const tabButton = document.createElement('button');
         tabButton.className = 'a2ui-tab-button';
-        if (index === 0) tabButton.classList.add('active');
+        // Use stored activeTabIndex instead of defaulting to 0
+        if (index === this.activeTabIndex) tabButton.classList.add('active');
         tabButton.textContent = tab.label || `Tab ${index + 1}`;
         tabButton.dataset.tabId = tab.id;
+
+        // Store tab index when clicked
+        tabButton.addEventListener('click', () => {
+          this.activeTabIndex = index;
+        });
+
         tabsHeader.appendChild(tabButton);
 
         // Create tab content
         const tabContent = document.createElement('div');
         tabContent.id = tab.id;
         tabContent.className = 'a2ui-tab-content';
-        if (index === 0) tabContent.classList.add('active');
+        // Use stored activeTabIndex instead of defaulting to 0
+        if (index === this.activeTabIndex) tabContent.classList.add('active');
 
         if (tab.children) {
           tab.children.forEach(child => {
