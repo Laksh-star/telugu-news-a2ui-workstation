@@ -566,6 +566,21 @@ class A2UIRenderer {
           // Re-render with new A2UI payload
           const workstation = document.getElementById('workstation');
           this.render(result, workstation);
+
+          // Show success notification for regenerate actions
+          if (action.url === '/api/regenerate') {
+            const section = requestBody.section;
+            const sectionNames = {
+              headlines: 'హెడ్‌లైన్స్ / Headlines',
+              script: 'స్క్రిప్ట్ / Script',
+              hashtags: 'హ్యాష్‌ట్యాగ్స్ / Hashtags'
+            };
+            const sectionName = sectionNames[section] || section;
+            this.showNotification(
+              `✅ ${sectionName} రీజనరేట్ చేయబడింది / ${sectionName} regenerated successfully!`,
+              'success'
+            );
+          }
         } else if (result.success) {
           // Handle save draft
           if (action.url === '/api/save') {
