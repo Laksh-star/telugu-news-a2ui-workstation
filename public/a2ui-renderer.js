@@ -695,12 +695,6 @@ HASHTAGS (హ్యాష్‌ట్యాగ్స్)
 ${data.hashtags.join(' ')}
 
 ================================================
-THUMBNAIL CHECKLIST (థంబ్‌నైల్ చెక్‌లిస్ట్)
-================================================
-
-${data.thumbnailChecklist.map((item, i) => `${item.completed ? '✓' : '☐'} ${i + 1}. ${item.label}`).join('\n')}
-
-================================================
 ORIGINAL INPUT
 ================================================
 
@@ -804,13 +798,6 @@ ${data.originalInput}
 
           <h2>#️⃣ Hashtags / హ్యాష్‌ట్యాగ్స్</h2>
           <p class="hashtags">${data.hashtags.join(' ')}</p>
-
-          <h2>✅ Thumbnail Checklist / థంబ్‌నైల్ చెక్‌లిస్ట్</h2>
-          <ul class="checklist">
-            ${data.thumbnailChecklist.map(item =>
-              `<li>${item.completed ? '✓' : '☐'} ${item.label}</li>`
-            ).join('')}
-          </ul>
 
           <h2>📄 Original Input</h2>
           <div class="script-box">
